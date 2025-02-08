@@ -22,7 +22,7 @@ const createTransaction = async (req, res) => {
     const receiver = await User.findOne({ 'accountDetails.accountNumber': receiverAccNum });
 
     if (!receiver) {
-        return res.json({ success, message: 'Transaction error: Receiver account number does not exist.' });
+        return res.json({ success, message: 'Transaction error: Please enter valid receiver account number.' });
     }
 
     // Check if sender has sufficient balance
@@ -83,7 +83,7 @@ const fetchUserTransaction = async (req, res) => {
 
         // If no transactions found
         if (!transactions || transactions.length === 0) {
-            return res.status(404).json({ success, message: "No transactions found for the user." });
+            return res.status(200).json({ success, message: "No transactions found for the user." });
         }
 
         // Return transactions
