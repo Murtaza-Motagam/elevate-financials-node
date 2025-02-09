@@ -167,7 +167,7 @@ const accountDetails = async (req, res) => {
                 success: true,
                 message: "Account created successfully!",
                 authtoken,
-                data
+                data: updatedUser,
             });
         } else {
             return res.status(500).json({ success: false, message: "Something went wrong while updating account!" });
@@ -221,7 +221,7 @@ const login = async (req, res) => {
 
         const authtoken = jwt.sign(data, JWT_SECRET);
         success = true;
-        res.status(200).json({ success, message: "Login successfull !", authtoken });
+        res.status(200).json({ success, message: "Login successfull !", authtoken, user });
     } catch (error) {
         console.error(error.message);
         res.status(500).send("Some Error Occurred.");
