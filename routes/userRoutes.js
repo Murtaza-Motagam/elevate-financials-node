@@ -5,6 +5,6 @@ const fetchUser = require('../middlewares/fetchUser');
 
 // user detail fetch
 router.get('/get-user', fetchUser, UserController.getUser);
-router.get('/update-profile', fetchUser, UserController.updateProfile);
+router.put('/update-profile', fetchUser, UserController.updateProfile);
 
 module.exports = router;

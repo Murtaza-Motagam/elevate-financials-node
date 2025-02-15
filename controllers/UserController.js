@@ -16,20 +16,46 @@ const getUser = async (req, res) => {
     }
 }
 
+
 const updateProfile = async (req, res) => {
     let success = false;
+    const userId = req.user.id;
+    const { profileImg, username, accountType } = req.body;
+
     try {
-        // const { profileImg, }
-        const details = await User.findById(userId).select("-authentication.password");
+        // Check if the user exists
+        const user = await User.findById(userId).select("-authentication.password");
+
+        if (!user) {
+            return res.status(404).json({ success, message: 'No account found!' });
+        }
+
+        // Update the user profile correctly
+        const updateUser = await User.findOneAndUpdate(
+            { _id: userId }, // Filter condition
+            {
+                $set: {
+                    "documentDetails.profileImg": profileImg,
+                    "authentication.username": username,
+                    "accountDetails.accountType": accountType
+                }
+            },
+            { new: true } // Return updated document
+        );
+
+        if (!updateUser) {
+            return res.status(400).json({ success, message: "Profile update failed" });
+        }
 
         success = true;
-        res.json({ success, details });
+        return res.status(200).json({ success, message: 'Profile updated successfully', user: updateUser });
+
+    } catch (error) {
+        console.error("Error updating profile:", error.message);
+        res.status(500).json({ success, message: "Internal Server Error" });
     }
-    catch (error) {
-        console.error(error.message);
-        res.status(500).send("Internal Server Error");
-    }
-}
+};
+
 
 module.exports = {
     getUser,
