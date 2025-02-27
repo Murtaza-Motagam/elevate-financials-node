@@ -8,8 +8,9 @@ const path = require('path');
 router.post('/upload', (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
+      console.log('err: ', err);
       // Handle errors from Multer
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: err.message,
       });
