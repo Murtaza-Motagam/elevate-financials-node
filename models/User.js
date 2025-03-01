@@ -4,8 +4,8 @@ const UserSchema = new mongoose.Schema({
     personalDetails: {
         firstName: { type: String, },
         lastName: { type: String, },
-        email: { type: String, required: true, unique: true, lowercase: true },
-        mobNo: { type: String, required: true, unique: true },
+        email: { type: String, required: true, lowercase: true },
+        mobNo: { type: String, required: true },
         dob: { type: Date, required: true },
         gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
         alternateEmail: { type: String },
@@ -28,9 +28,9 @@ const UserSchema = new mongoose.Schema({
         },
     },
     accountDetails: {
-        accountNumber: { type: Number, unique: true },
-        crnNumber: { type: Number, unique: true },
-        ifscCode: { type: String, unique: true },
+        accountNumber: { type: Number, },
+        crnNumber: { type: Number },
+        ifscCode: { type: String },
         accountType: {
             type: String,
             enum: ['Savings', 'Checking', 'Fixed Deposit'],
