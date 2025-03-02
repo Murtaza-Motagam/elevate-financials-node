@@ -17,7 +17,7 @@
 /.next/
 /out/
 .env
-uploads
+# uploads
 
 # production
 /build
