@@ -1,5 +1,5 @@
-const express = require('express');
 const User = require('../models/User');
+const { getTransactionsByMonth, getLatestTransactions } = require('../services/TransactionService');
 
 const getUser = async (req, res) => {
     let success = false;
@@ -56,8 +56,25 @@ const updateProfile = async (req, res) => {
     }
 };
 
+const getAnalytics = async (req, res) => {
+    try {
+        const transactionHistory = await getTransactionsByMonth();
+        const latestTransactions = await getLatestTransactions();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                transactionHistory,
+                latestTransactions
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server Error", error });
+    }
+};
 
 module.exports = {
     getUser,
     updateProfile,
+    getAnalytics
 }

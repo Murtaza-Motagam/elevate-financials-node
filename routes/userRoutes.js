@@ -7,4 +7,7 @@ const fetchUser = require('../middlewares/fetchUser');
 router.get('/get-user', fetchUser, UserController.getUser);
 router.put('/update-profile', fetchUser, UserController.updateProfile);
 
+// Analytics route
+router.get('/get-analytics', fetchUser, UserController.getAnalytics);
+
 module.exports = router;
