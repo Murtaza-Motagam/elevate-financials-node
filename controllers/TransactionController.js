@@ -50,7 +50,7 @@ const createTransaction = async (req, res) => {
     const transaction = await Transactions.create({
         transactionId,
         senderId: sender.id,
-        ifscCodeNumber: ifscCodeNumber,
+        ifscCodeNumber,
         receiverAccNum,
         receiverId: receiver.id,
         amt,

@@ -95,7 +95,6 @@ const getLatestTransactions = async (userId) => {
 
 const getTransactionCountByType = async (userId) => {
     const transactions = await Transactions.find({ senderId: userId, status: "Success" }).limit(5);
-    console.log("Filtered Transactions:", transactions);
 
     try {
         const transactionCounts = await Transactions.aggregate([
