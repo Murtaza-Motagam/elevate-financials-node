@@ -6,7 +6,7 @@ const { generateTransactionId } = require('../lib/common');
 const createTransaction = async (req, res) => {
     let success = false;
 
-    const { receiverAccNum, amt, remarks, transactionTypeNm } = req.body
+    const { receiverAccNum, amt, remarks, ifscCodeNumber, transactionTypeNm } = req.body
 
     // Check if recieverAccNm is not user's own acc number
     const sender = await User.findById(req.user.id);
@@ -50,7 +50,7 @@ const createTransaction = async (req, res) => {
     const transaction = await Transactions.create({
         transactionId,
         senderId: sender.id,
-        ifscCodeNumber: sender.accountDetails.ifscCode,
+        ifscCodeNumber: ifscCodeNumber,
         receiverAccNum,
         receiverId: receiver.id,
         amt,
