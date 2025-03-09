@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { getTransactionsByMonth, getLatestTransactions } = require('../services/TransactionService');
+const { getTransactionsByMonth, getLatestTransactions, getTransactionCountByType } = require('../services/TransactionService');
 
 const getUser = async (req, res) => {
     let success = false;
@@ -58,14 +58,16 @@ const updateProfile = async (req, res) => {
 
 const getAnalytics = async (req, res) => {
     try {
-        const transactionHistory = await getTransactionsByMonth();
-        const latestTransactions = await getLatestTransactions();
+        const transactionHistory = await getTransactionsByMonth(req.user.id);
+        const latestTransactions = await getLatestTransactions(req.user.id);
+        const transactionType = await getTransactionCountByType(req.user.id);
 
         res.status(200).json({
             success: true,
             data: {
                 transactionHistory,
-                latestTransactions
+                latestTransactions,
+                transactionType
             }
         });
     } catch (error) {

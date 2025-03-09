@@ -1,36 +1,21 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const upload = require('../upload');
-const fs = require('fs');
-const path = require('path');
+const upload = require("../upload");
 
-// Route for handling file upload
-router.post('/upload', (req, res) => {
-  upload.single('image')(req, res, (err) => {
-    if (err) {
-      console.log('err: ', err);
-      // Handle errors from Multer
-      return res.status(200).json({
-        success: false,
-        message: err.message,
-      });
-    }
-
-    // Check if the file was provided
+router.post("/upload", upload.single("image"), (req, res) => {
+  try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file provided' });
+      return res.status(400).json({ success: false, message: "No file provided" });
     }
 
-    const uploadDir = path.join(__dirname, '../uploads');
-    const uploadedFilePath = path.join(uploadDir, req.file.filename);
-
-    // Return file details after successful upload
     res.status(200).json({
       success: true,
-      message: 'File uploaded successfully',
-      data: req.file,
+      message: "File uploaded successfully",
+      imageUrl: req.file.path,
     });
-  });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Upload failed", error: error.message });
+  }
 });
 
 module.exports = router;

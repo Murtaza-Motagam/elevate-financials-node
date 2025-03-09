@@ -6,7 +6,7 @@ const { generateTransactionId } = require('../lib/common');
 const createTransaction = async (req, res) => {
     let success = false;
 
-    const { receiverAccNum, amt, remarks, transactionType } = req.body
+    const { receiverAccNum, amt, remarks, transactionTypeNm } = req.body
 
     // Check if recieverAccNm is not user's own acc number
     const sender = await User.findById(req.user.id);
@@ -58,7 +58,7 @@ const createTransaction = async (req, res) => {
         transactionDate: new Date(),
         status: 'Success',
         remarks,
-        transactionType,
+        transactionType: transactionTypeNm,
         balanceBefore: senderBalanceBefore,
         balanceAfter: senderBalanceAfter,
         ipAddress: req.ip,
