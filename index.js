@@ -9,7 +9,12 @@ connectToMongo();
 const app = express()
 const port = 5000
 
-app.use(cors())
+app.use(cors({
+    origin: [process.env.FRONTEND_BASE_URL],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
