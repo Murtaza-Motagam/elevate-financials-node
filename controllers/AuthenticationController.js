@@ -4,7 +4,8 @@ const { validationResult } = require('express-validator');
 var jwt = require('jsonwebtoken');
 const JWT_SECRET = 'UserIsValidated';
 const User = require('../models/User');
-const { generateAccountNumber, generateCrnNumber, generateIfscCode } = require('../lib/common');
+const { generateAccountNumber, generateCrnNumber, generateIfscCode, generateOtp } = require('../lib/common');
+const { encrypt, decrypt } = require('../lib/utils/encryption');
 
 const personalDetails = async (req, res) => {
     let success = false;
@@ -17,7 +18,9 @@ const personalDetails = async (req, res) => {
 
 
     try {
-        const { personalDetails } = req.body;
+        const { encrypted } = req.body;
+        const decryptedPayload = JSON.parse(decrypt(encrypted));
+        const { personalDetails } = decryptedPayload
         const { firstName, lastName, gender, dob, email, mobNo } = personalDetails;
 
         // Find user by email
@@ -50,7 +53,14 @@ const personalDetails = async (req, res) => {
         });
 
         success = true;
-        res.status(200).json({ success, message: "Successfully Save personal Details!", details: user });
+        const responsePayload = {
+            success: true,
+            message: "Successfully Save personal Details!",
+            details: user,
+        };
+
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         console.error(error.message);
         res.status(500).send("Some Error Occurred.");
@@ -67,7 +77,9 @@ const documentDetails = async (req, res) => {
     }
 
     try {
-        const { email, documentDetails } = req.body;
+        const { encrypted } = req.body;
+        const decryptedPayload = JSON.parse(decrypt(encrypted));
+        const { email, documentDetails } = decryptedPayload
 
         // Find user by email
         let document = await User.findOne({ 'personalDetails.email': email });
@@ -88,11 +100,13 @@ const documentDetails = async (req, res) => {
 
         if (updatedUser) {
             success = true;
-            res.status(200).json({
+            const responsePayload = {
                 success,
                 message: "Successfully saved document details!",
                 details: updatedUser.documentDetails
-            });
+            }
+            const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+            res.status(200).json({ encrypted: encryptedResponse });
         } else {
             res.status(500).json({ success, message: "Sorry something went wrong!" });
         }
@@ -112,7 +126,9 @@ const accountDetails = async (req, res) => {
     }
 
     try {
-        const { email, accountDetails } = req.body;
+        const { encrypted } = req.body;
+        const decryptedPayload = JSON.parse(decrypt(encrypted));
+        const { email, accountDetails } = decryptedPayload
         const { username, password, accountType } = accountDetails;
 
         // Find user by email
@@ -128,6 +144,7 @@ const accountDetails = async (req, res) => {
         const accountNm = generateAccountNumber();
         const crnNm = generateCrnNumber();
         const ifscCode = generateIfscCode();
+        const otp = generateOtp();
 
         // Hashing password
         let salt = await bcrypt.genSalt(10);
@@ -147,6 +164,7 @@ const accountDetails = async (req, res) => {
                 $set: {
                     'authentication.username': username,
                     'authentication.password': secPass,
+                    'authentication.otp': otp,
                     'accountDetails': accDetails,
                 }
             },
@@ -154,21 +172,14 @@ const accountDetails = async (req, res) => {
         );
 
         if (updatedUser) {
-            let data = {
-                user: {
-                    id: updatedUser.id,
-                },
-                accountDetails: updatedUser.accountDetails,
-            };
-
-            let authtoken = jwt.sign(data, JWT_SECRET);
-
-            return res.status(200).json({
-                success: true,
+            success = true;
+            const responsePayload = {
+                success,
                 message: "Account created successfully!",
-                authtoken,
                 data: updatedUser,
-            });
+            }
+            const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+            return res.status(200).json({ encrypted: encryptedResponse });
         } else {
             return res.status(500).json({ success: false, message: "Something went wrong while updating account!" });
         }
@@ -177,6 +188,59 @@ const accountDetails = async (req, res) => {
         res.status(500).send("Some Error Occurred.");
     }
 };
+
+const otpVerify = async (req, res) => {
+    let success = false;
+
+    const { encrypted } = req.body;
+    const decryptedPayload = JSON.parse(decrypt(encrypted));
+    const { email, otpNumber } = decryptedPayload
+
+    // Find user by email
+    let user = await User.findOneAndUpdate(
+        { 'personalDetails.email': email },
+        {
+            $set: {
+                'authentication.isVerified': true,
+            }
+        },
+        { new: true }
+    );
+
+    if (!user) {
+        return res.status(200).json({
+            success: false,
+            message: "Sorry user not found!"
+        });
+    }
+
+    if (user.authentication.otp == otpNumber) {
+        const isVerified = await User.findOneAndUpdate({ 'authentication.isVerified': true })
+        if (isVerified) {
+            let data = {
+                user: {
+                    id: isVerified.id,
+                },
+            };
+            let authtoken = jwt.sign(data, JWT_SECRET);
+            success = true;
+            const responsePayload = {
+                success,
+                message: "You have been successfully verified.",
+                authtoken,
+                data: user,
+            }
+            const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+            return res.status(200).json({ encrypted: encryptedResponse });
+        }
+    } else {
+        return res.status(200).json({
+            success,
+            message: "The OTP you entered is incorrect. Please try again.",
+        });
+    }
+}
+
 
 // Login route
 const login = async (req, res) => {
@@ -189,7 +253,9 @@ const login = async (req, res) => {
     }
 
     try {
-        const { username, password } = req.body;
+        const { encrypted } = req.body;
+        const decryptedPayload = JSON.parse(decrypt(encrypted));
+        const { username, password } = decryptedPayload
 
         const isNumeric = !isNaN(username);
 
@@ -221,7 +287,9 @@ const login = async (req, res) => {
 
         const authtoken = jwt.sign(data, JWT_SECRET);
         success = true;
-        res.status(200).json({ success, message: "Login successfull !", authtoken, user });
+        const responsePayload = { success, message: "Login successfull !", authtoken, user };
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         console.error(error.message);
         res.status(500).send("Some Error Occurred.");
@@ -232,5 +300,6 @@ module.exports = {
     personalDetails,
     documentDetails,
     accountDetails,
+    otpVerify,
     login
 }

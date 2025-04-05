@@ -1,14 +1,18 @@
+const { encrypt, decrypt } = require('../lib/utils/encryption');
 const User = require('../models/User');
 const { getTransactionsByMonth, getLatestTransactions, getTransactionCountByType } = require('../services/TransactionService');
 
 const getUser = async (req, res) => {
     let success = false;
+
     try {
         let userId = req.user.id;
         const details = await User.findById(userId).select("-authentication.password");
 
         success = true;
-        res.json({ success, details });
+        const responsePayload = { success, details };
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        res.json({ encrypted: encryptedResponse });
     }
     catch (error) {
         console.error(error.message);
@@ -16,11 +20,12 @@ const getUser = async (req, res) => {
     }
 }
 
-
 const updateProfile = async (req, res) => {
     let success = false;
     const userId = req.user.id;
-    const { profileImg, username, accountType } = req.body;
+    const { encrypted } = req.body;
+    const decryptedPayload = JSON.parse(decrypt(encrypted));
+    const { profileImg, username, accountType } = decryptedPayload;
 
     try {
         // Check if the user exists
@@ -48,7 +53,9 @@ const updateProfile = async (req, res) => {
         }
 
         success = true;
-        return res.status(200).json({ success, message: 'Profile updated successfully', user: updateUser });
+        const responsePayload = { success, message: 'Profile updated successfully', user: updateUser };
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        return res.status(200).json({ encrypted: encryptedResponse });
 
     } catch (error) {
         console.error("Error updating profile:", error.message);
@@ -62,14 +69,16 @@ const getAnalytics = async (req, res) => {
         const latestTransactions = await getLatestTransactions(req.user.id);
         const transactionType = await getTransactionCountByType(req.user.id);
 
-        res.status(200).json({
+        const responsePayload = {
             success: true,
             data: {
                 transactionHistory,
                 latestTransactions,
                 transactionType
             }
-        });
+        };
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server Error", error });
     }

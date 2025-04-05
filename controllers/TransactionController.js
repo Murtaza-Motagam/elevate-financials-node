@@ -2,11 +2,13 @@ const express = require('express');
 const Transactions = require('../models/Transactions');
 const User = require('../models/User');
 const { generateTransactionId } = require('../lib/common');
+const { encrypt, decrypt } = require('../lib/utils/encryption');
 
 const createTransaction = async (req, res) => {
     let success = false;
-
-    const { receiverAccNum, amt, remarks, ifscCodeNumber, transactionTypeNm } = req.body
+    const { encrypted } = req.body;
+    const decryptedPayload = JSON.parse(decrypt(encrypted));
+    const { receiverAccNum, amt, remarks, ifscCodeNumber, transactionTypeNm } = decryptedPayload;
 
     // Check if recieverAccNm is not user's own acc number
     const sender = await User.findById(req.user.id);
@@ -71,7 +73,9 @@ const createTransaction = async (req, res) => {
     });
 
     success = true;
-    res.status(200).json({ success, message: "Transaction successful", details: transaction });
+    const responsePayload = { success, message: "Transaction successful", details: transaction };
+    const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+    res.status(200).json({ encrypted: encryptedResponse });
 }
 
 const fetchUserTransaction = async (req, res) => {
@@ -88,7 +92,9 @@ const fetchUserTransaction = async (req, res) => {
 
         // Return transactions
         success = true;
-        return res.status(200).json({ success: true, transactions });
+        const responsePayload = { success: true, transactions };
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        return res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         console.error("Error fetching user transactions:", error);
         return res.status(500).json({ success: false, message: "Internal Server Error" });

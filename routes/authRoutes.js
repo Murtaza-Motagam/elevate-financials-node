@@ -6,6 +6,7 @@ const AuthenticationController = require('../controllers/AuthenticationControlle
 router.post('/save-personal-details', AuthenticationController.personalDetails)
 router.post('/save-document-details', AuthenticationController.documentDetails)
 router.post('/save-banking-details', AuthenticationController.accountDetails)
+router.post('/verify-otp', AuthenticationController.otpVerify)
 
 // Login route
 router.post('/login', AuthenticationController.login)

@@ -45,6 +45,8 @@ const UserSchema = new mongoose.Schema({
         password: { type: String, },
         username: { type: String, },
         isActive: { type: Boolean, default: true },
+        otp: { type: String },
+        isVerified: { type: Boolean, default: false },
         roles: {
             type: [String],
             default: ['User'],
