@@ -2,6 +2,7 @@ require('dotenv').config();
 const connectToMongo = require('./db');
 const express = require('express')
 const cors = require('cors')
+var logger = require('morgan');
 const path = require('path')
 const commonRoutes = require('./routes/commonRoutes');
 
@@ -9,6 +10,8 @@ connectToMongo();
 
 const app = express()
 const port = 5000
+
+app.use(logger('dev'));
 
 app.use(cors({
     origin: [process.env.FRONTEND_BASE_URL],

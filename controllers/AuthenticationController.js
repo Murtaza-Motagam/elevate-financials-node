@@ -197,7 +197,12 @@ const otpVerify = async (req, res) => {
     const { email, otpNumber } = decryptedPayload;
 
     // Find user by email
-    let user = await User.findOneAndUpdate({ 'personalDetails.email': email });
+    let user = await User.findOneAndUpdate({ 'personalDetails.email': email }, {
+        $set: {
+            'authentication.isVerified': true,
+        },
+
+    }, { new: true });
 
     if (!user) {
         return res.status(200).json({
@@ -206,9 +211,8 @@ const otpVerify = async (req, res) => {
         });
     }
 
-    if (user.authentication.otp == otpNumber) {
-        user.authentication.isVerified = true;
-        await user.save();
+
+    if (user.authentication.otp === otpNumber) {
 
         const data = {
             user: {
