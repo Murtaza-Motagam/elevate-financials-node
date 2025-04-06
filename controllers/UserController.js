@@ -1,4 +1,5 @@
 const { addEncryption, removeDecryption } = require('../lib/common');
+const QRCode = require("qrcode");
 const User = require('../models/User');
 const { getTransactionsByMonth, getLatestTransactions, getTransactionCountByType } = require('../services/TransactionService');
 
@@ -83,8 +84,42 @@ const getAnalytics = async (req, res) => {
     }
 };
 
+const generateQr = async (req, res) => {
+    let success = false;
+    try {
+
+        const user = await User.findById(req.user.id).select(
+            "accountDetails.accountNumber accountDetails.ifscCode accountDetails.accountType personalDetails.firstName personalDetails.lastName"
+        );
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        const userData = {
+            name: `${user.personalDetails.firstName} ${user.personalDetails.lastName}`,
+            accountNumber: user.accountDetails.accountNumber,
+            ifscCode: user.accountDetails.ifscCode,
+            accountType: user.accountDetails.accountType,
+        };
+
+        const qrDataFormattedManner = `Name: ${userData.name} | Account No: ${userData.accountNumber} | IFSC: ${userData.ifscCode} | Type: ${userData.accountType}`;
+
+        const qrData = JSON.stringify(qrDataFormattedManner);
+
+        const qrImage = await QRCode.toDataURL(qrData);
+        success = true;
+        const responsePayload = { success, qrImage };
+        const encryptedResponse = addEncryption(responsePayload);
+        return res.status(200).json({ encrypted: encryptedResponse });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Internal Server Error");
+    }
+}
+
+
 module.exports = {
     getUser,
     updateProfile,
-    getAnalytics
+    getAnalytics,
+    generateQr
 }

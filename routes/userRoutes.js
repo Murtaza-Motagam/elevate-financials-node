@@ -10,4 +10,7 @@ router.put('/update-profile', fetchUser, UserController.updateProfile);
 // Analytics route
 router.get('/get-analytics', fetchUser, UserController.getAnalytics);
 
+//Qr generating
+router.get('/generate-qr', fetchUser, UserController.generateQr);
+
 module.exports = router;
