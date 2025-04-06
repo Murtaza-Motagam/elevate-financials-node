@@ -1,4 +1,4 @@
-const { encrypt, decrypt } = require('../lib/utils/encryption');
+const { addEncryption, removeDecryption } = require('../lib/common');
 const User = require('../models/User');
 const { getTransactionsByMonth, getLatestTransactions, getTransactionCountByType } = require('../services/TransactionService');
 
@@ -11,7 +11,7 @@ const getUser = async (req, res) => {
 
         success = true;
         const responsePayload = { success, details };
-        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        const encryptedResponse = addEncryption(responsePayload);
         res.json({ encrypted: encryptedResponse });
     }
     catch (error) {
@@ -23,8 +23,7 @@ const getUser = async (req, res) => {
 const updateProfile = async (req, res) => {
     let success = false;
     const userId = req.user.id;
-    const { encrypted } = req.body;
-    const decryptedPayload = JSON.parse(decrypt(encrypted));
+    const decryptedPayload = removeDecryption(req.body.encrypted);
     const { profileImg, username, accountType } = decryptedPayload;
 
     try {
@@ -54,7 +53,7 @@ const updateProfile = async (req, res) => {
 
         success = true;
         const responsePayload = { success, message: 'Profile updated successfully', user: updateUser };
-        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        const encryptedResponse = addEncryption(responsePayload);
         return res.status(200).json({ encrypted: encryptedResponse });
 
     } catch (error) {
@@ -77,7 +76,7 @@ const getAnalytics = async (req, res) => {
                 transactionType
             }
         };
-        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        const encryptedResponse = addEncryption(responsePayload);
         res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server Error", error });

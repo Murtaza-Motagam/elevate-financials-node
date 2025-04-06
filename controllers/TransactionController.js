@@ -1,13 +1,11 @@
 const express = require('express');
 const Transactions = require('../models/Transactions');
 const User = require('../models/User');
-const { generateTransactionId } = require('../lib/common');
-const { encrypt, decrypt } = require('../lib/utils/encryption');
+const { generateTransactionId, removeDecryption, addEncryption } = require('../lib/common');
 
 const createTransaction = async (req, res) => {
     let success = false;
-    const { encrypted } = req.body;
-    const decryptedPayload = JSON.parse(decrypt(encrypted));
+    const decryptedPayload = removeDecryption(req.body.encrypted);
     const { receiverAccNum, amt, remarks, ifscCodeNumber, transactionTypeNm } = decryptedPayload;
 
     // Check if recieverAccNm is not user's own acc number
@@ -74,7 +72,7 @@ const createTransaction = async (req, res) => {
 
     success = true;
     const responsePayload = { success, message: "Transaction successful", details: transaction };
-    const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+    const encryptedResponse = addEncryption(responsePayload);
     res.status(200).json({ encrypted: encryptedResponse });
 }
 
@@ -93,7 +91,7 @@ const fetchUserTransaction = async (req, res) => {
         // Return transactions
         success = true;
         const responsePayload = { success: true, transactions };
-        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        const encryptedResponse = addEncryption(responsePayload);
         return res.status(200).json({ encrypted: encryptedResponse });
     } catch (error) {
         console.error("Error fetching user transactions:", error);
