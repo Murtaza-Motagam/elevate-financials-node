@@ -79,7 +79,7 @@ const documentDetails = async (req, res) => {
     try {
         const { encrypted } = req.body;
         const decryptedPayload = JSON.parse(decrypt(encrypted));
-        const { email, documentDetails } = decryptedPayload
+        const { email, documentDetails } = decryptedPayload;
 
         // Find user by email
         let document = await User.findOne({ 'personalDetails.email': email });
@@ -128,7 +128,7 @@ const accountDetails = async (req, res) => {
     try {
         const { encrypted } = req.body;
         const decryptedPayload = JSON.parse(decrypt(encrypted));
-        const { email, accountDetails } = decryptedPayload
+        const { email, accountDetails } = decryptedPayload;
         const { username, password, accountType } = accountDetails;
 
         // Find user by email
@@ -194,18 +194,10 @@ const otpVerify = async (req, res) => {
 
     const { encrypted } = req.body;
     const decryptedPayload = JSON.parse(decrypt(encrypted));
-    const { email, otpNumber } = decryptedPayload
+    const { email, otpNumber } = decryptedPayload;
 
     // Find user by email
-    let user = await User.findOneAndUpdate(
-        { 'personalDetails.email': email },
-        {
-            $set: {
-                'authentication.isVerified': true,
-            }
-        },
-        { new: true }
-    );
+    let user = await User.findOneAndUpdate({ 'personalDetails.email': email });
 
     if (!user) {
         return res.status(200).json({
@@ -215,24 +207,25 @@ const otpVerify = async (req, res) => {
     }
 
     if (user.authentication.otp == otpNumber) {
-        const isVerified = await User.findOneAndUpdate({ 'authentication.isVerified': true })
-        if (isVerified) {
-            let data = {
-                user: {
-                    id: isVerified.id,
-                },
-            };
-            let authtoken = jwt.sign(data, JWT_SECRET);
-            success = true;
-            const responsePayload = {
-                success,
-                message: "You have been successfully verified.",
-                authtoken,
-                data: user,
-            }
-            const encryptedResponse = encrypt(JSON.stringify(responsePayload));
-            return res.status(200).json({ encrypted: encryptedResponse });
+        user.authentication.isVerified = true;
+        await user.save();
+
+        const data = {
+            user: {
+                id: user._id,
+            },
+        };
+
+        let authtoken = jwt.sign(data, JWT_SECRET);
+        success = true;
+        const responsePayload = {
+            success,
+            message: "You have been successfully verified.",
+            authtoken,
+            data: user,
         }
+        const encryptedResponse = encrypt(JSON.stringify(responsePayload));
+        return res.status(200).json({ encrypted: encryptedResponse });
     } else {
         return res.status(200).json({
             success,
